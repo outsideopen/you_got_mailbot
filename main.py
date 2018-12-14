@@ -5,6 +5,8 @@ try:                                                                    #import 
     from camera.cam import Camera
     import datetime
     import os
+    import cv2
+    import numpy as np
     import time
     print("done")
 except Exception as e:                                                  #handle import errors
@@ -56,7 +58,7 @@ doorState2 = False                                                      #previou
 openFrames=[]                                                           #frame buffer for all frames captured while door is open
 startDetection = False                                                  
 faceDetected = False
-faceFrames=[]
+faceArray = []
 
 while True:                                                             #main loop
     try:
@@ -85,17 +87,26 @@ while True:                                                             #main lo
             if startDetection == True:                                  #begin face detection
                 for f in openFrames:                                    #use frames stored in buffer
                     print("searching for faces...")
-                    g = camera.convertGray(f)                           #convert to grayscale
-                    faces = camera.getFaces(g)                          #detect faces in gray frame
-                
-                    if len(faces) == 0 or len(faces) > 1:               #only continue with good data
-                        pass
+                    faces = camera.getFaces(f)                          #detect faces in gray frame
+                    
+                    for i in range(0, faces.shape[2]):
+                        confidence = faces[0, 0, i, 2]
+                        
+                        if confidence > camera.minimumConfidence:
+                            print("face found", confidence)
+                            (h, w) = f.shape[:2]
+                            box = faces[0, 0, i, 3:7] * np.array([w, h, w, h])
+                            (startX, startY, endX, endY) = box.astype("int")
 
-                    else:                                          
-                        print("face found")
-                        f = camera.highlightFace(f, faces)              #draw rectangle around detected face
-                        faceFrames.append(f)                                 #record detected face frame
-                        faceDetected = True
+                            text = "{:.2f}%".format(confidence * 100)
+                            y = startY - 10 if startY - 10 > 10 else startY + 10
+
+                            cv2.rectangle(f, (startX, startY), (endX, endY), (0, 0, 255), 2)
+                            cv2.putText(f, text, (startX, y), cv2.FONT_HERSHEY_SIMPLEX, 0.45, (0, 0, 255), 2)
+                            
+                            faceDetected = True
+                            faceArray.append([f,confidence])
+                            break
 
                 if faceDetected == False:                               #if no faces are found upload anyways
                     print("no face found")
@@ -105,13 +116,20 @@ while True:                                                             #main lo
                     timer = 30                                          #wait 30 seconds before attempting to capture again
                     print("delay", timer, " seconds")
                 else:
-                    median = int(len(faceFrames)/2)
+                    highestConfidence = 0
+                    bestFrame = None
+                    for i in range(len(faceArray)):
+                        if faceArray[i][1] > highestConfidence:
+                            highestConfidence = faceArray[i][1]
+                            bestFrame = faceArray[i][0]
+
                     print("uploading image")
-                    Upload(faceFrames[median], True)                         #upload image to the internet
-                    timer = 30                                          #wait 30 seconds before attempting to capture again
+                    Upload(bestFrame, True)
+                    timer = 30
                     print("delay", timer, " seconds")
 
-                faces=[]
+                faces=None
+                faceArray=[]
                 openFrames=[]                                           #clear frame buffer
                 faceDetected = False                                    #reset detection variables
                 startDetection = False

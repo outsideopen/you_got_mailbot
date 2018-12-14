@@ -21,7 +21,8 @@ class Camera():                                                                 
                 self.captureThread.do_run = True
                 self.captureThread.start()
 
-                self.faceCascade = cv2.CascadeClassifier('camera/haarcascade_frontalface_default.xml')          #haar cascade classifier for facial detection
+                self.net = cv2.dnn.readNetFromCaffe("camera/deploy.prototext.txt", "camera/res10_300x300_ssd_iter_140000.caffemodel")
+                self.minimumConfidence = 0.5
 
                 print("done")
     
@@ -45,15 +46,9 @@ class Camera():                                                                 
                 return gray
 
         def getFaces(self, frame):                                                                              #find faces in frame array with haarcascade classifier
-                faces = self.faceCascade.detectMultiScale(frame, 1.3, 5)
+                self.net.setInput(cv2.dnn.blobFromImage(cv2.resize(frame, (300, 300)), 1.0, (300, 300), (104.0, 177.0, 123.0)))
+                faces = self.net.forward()
                 return faces
-
-        def highlightFace(self, frame, faces):                                                                  #draw rectangle around the faces returned by getFaces()
-                img = frame
-                for (x,y,w,h) in faces:
-                        cv2.rectangle(img,(x,y),(x+w,y+h),(255,0,0),2)
-
-                return img
 
         def saveFrame(self, frame, name="image"):                                                               #save frame array to disk
                 cv2.imwrite(name, frame)
