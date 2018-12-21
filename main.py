@@ -3,6 +3,7 @@ try:                                                                    #import 
     from gdrive.drivePublisher import Gpublisher
     from slack.slackPublisher import Spublisher
     from camera.cam import Camera
+    from datalog.log import Log
     import datetime
     import os
     import cv2
@@ -19,6 +20,7 @@ try:                                                                    #initial
     camera = Camera()
     slack = Spublisher()
     drive = Gpublisher()
+    log = Log()
     print("done")
 except Exception as e:                                                  #handle initialization errors
     print("error initializing modules")
@@ -26,7 +28,7 @@ except Exception as e:                                                  #handle 
     exit()
 
 def closeAll():                                                         #soft exit method
-    print("stopping MailBot")
+    log.printWrite("stopping MailBot")
     exit()
 
 def Upload(frame, face):                                                #upload method
@@ -45,9 +47,9 @@ def Upload(frame, face):                                                #upload 
     
     os.remove(imagePath)                                                #remove frame from disk
 
-    print("uploaded image")
+    log.printWrite("uploaded image")
     
-print("starting main loop")
+log.printWrite("starting main loop")
                                                                         #timer variables
 timer = 0                                                               #timer counter AKA the tick
 timerConstant = 1                                                       #timer delay time AKA the tock
@@ -59,6 +61,7 @@ openFrames=[]                                                           #frame b
 startDetection = False                                                  
 faceDetected = False
 faceArray = []
+camera.minimumConfidence = 0.96
 
 while True:                                                             #main loop
     try:
@@ -85,15 +88,19 @@ while True:                                                             #main lo
                 isOpen = False
 
             if startDetection == True:                                  #begin face detection
+                log.printWrite("starting search: " + str(datetime.datetime.now().strftime("%Y-%m-%d %H:%M")))
+
                 for f in openFrames:                                    #use frames stored in buffer
-                    print("searching for faces...")
+                    log.printWrite("searching for faces...")
                     faces = camera.getFaces(f)                          #detect faces in gray frame
+                    kill = False
                     
                     for i in range(0, faces.shape[2]):
                         confidence = faces[0, 0, i, 2]
                         
-                        if confidence > camera.minimumConfidence:
-                            print("face found", confidence)
+                        if confidence > camera.minimumConfidence and kill == False:
+                            log.printWrite("face found "+ str(confidence))
+                            
                             (h, w) = f.shape[:2]
                             box = faces[0, 0, i, 3:7] * np.array([w, h, w, h])
                             (startX, startY, endX, endY) = box.astype("int")
@@ -106,15 +113,22 @@ while True:                                                             #main lo
                             
                             faceDetected = True
                             faceArray.append([f,confidence])
+
+                            kill = True
+
+                        elif (kill == True):
                             break
 
+                    if (kill == True):
+                        break
+
                 if faceDetected == False:                               #if no faces are found upload anyways
-                    print("no face found")
+                    log.printWrite("no face found")
                     median = int(len(openFrames)/2)                     #find middle frame
-                    print("uploading image")
+                    log.printWrite("uploading image")
                     Upload(openFrames[median], False)                   #upload image to the internet
                     timer = 30                                          #wait 30 seconds before attempting to capture again
-                    print("delay", timer, " seconds")
+                    log.printWrite("delay "+ str(timer) + " seconds")
                 else:
                     highestConfidence = 0
                     bestFrame = None
@@ -123,10 +137,11 @@ while True:                                                             #main lo
                             highestConfidence = faceArray[i][1]
                             bestFrame = faceArray[i][0]
 
-                    print("uploading image")
+                    log.printWrite("uploading image")
+                    log.printWrite("max confidence: " + str(highestConfidence))
                     Upload(bestFrame, True)
                     timer = 30
-                    print("delay", timer, " seconds")
+                    log.printWrite("delay " + str(timer) + " seconds")
 
                 faces=None
                 faceArray=[]
@@ -141,12 +156,12 @@ while True:                                                             #main lo
             timer-=1
 
     except KeyboardInterrupt:                                           #handle keyboard interrupts
-        print("keyboard interrupt")
+        log.printWrite("keyboard interrupt")
         break                                                           #stop loop
 
     except Exception as e:                                              #handle misc errors
-        print("error")
-        print(e)
+        log.printWrite("error")
+        log.printWrite(str(e))
         break                                                           #stop loop
 
 closeAll()                                                              #exit safely
