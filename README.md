@@ -20,7 +20,7 @@ By Braedan Kennedy
 	slackclient
 	RPi.GPIO
 
-### Setup:
+## Setup:
 Enable Raspberry Pi camera serial interface through raspi-config
 
 Go to https://api.slack.com and create a new slackbot.
@@ -38,7 +38,7 @@ Example run script:
 	screen -d -m -S mailbox bash -c 'cd /home/pi/mailbot && python3 main.py'
 	
 	
-### Acknowledgements:
+## Acknowledgements:
 3D printed case credit to Superrei
 Download the file on Thingiverse: https://www.thingiverse.com/thing:1595429
 	
