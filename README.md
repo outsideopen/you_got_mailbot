@@ -31,7 +31,7 @@ Go to https://console.developers.google.com/apis and start a new project.
 Click Create credentials - API key. Save the .json as credentials.json in the "gdrive" directory.
 	
 Go to google drive and create a new folder. 
-Edit its permissions so anyone on the internet can view it. In sharing, find the share link and copy it. In "drivePublisher.py", int the upload method, replace "folderID" with the link.
+Edit its permissions so anyone on the internet can view it. In sharing, find the share link and copy it. In "drivePublisher.py", in the upload method, replace "folderID" with the link.
 
 Example run script:
 	
