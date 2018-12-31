@@ -1,4 +1,4 @@
-# mailbot
+# You Got Mailbot
 Mailbox camera code for Raspberry Pi
 By Braedan Kennedy
 
@@ -21,7 +21,7 @@ By Braedan Kennedy
 	RPi.GPIO
 
 ### Setup:
-Enable Raspberry Pi camera interface 
+Enable Raspberry Pi camera serial interface through raspi-config
 
 Go to https://api.slack.com and create a new slackbot.
 Create a bot user and copy the "Bot User OAuth Access Token" to a new file named "token" in the "slack" directory.
@@ -39,9 +39,9 @@ Example run script:
 	
 	
 ### Acknowledgements:
-	3D printed case credit to Superrei
-	Download the file on Thingiverse: https://www.thingiverse.com/thing:1595429
+3D printed case credit to Superrei
+Download the file on Thingiverse: https://www.thingiverse.com/thing:1595429
 	
-	Thanks to Adrian at PyImageSearch for the helpful tutorial: https://www.pyimagesearch.com/2018/02/26/face-detection-with-opencv-and-deep-learning/
+Thanks to Adrian at PyImageSearch for the helpful tutorial: https://www.pyimagesearch.com/2018/02/26/face-detection-with-opencv-and-deep-learning/
 
 	
